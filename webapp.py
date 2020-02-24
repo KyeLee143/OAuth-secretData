@@ -15,6 +15,7 @@ app = Flask(__name__)
 app.debug = True #Change this to False for production
 
 app.secret_key = os.environ['SECRET_KEY'] 
+os.environ['OAUTHLIB_INSECURE_TRANSPORT']='1'
 oauth = OAuth(app)
 
 #Set up Github as the OAuth provider
@@ -41,7 +42,7 @@ def home():
 
 @app.route('/login')
 def login():   
-    return github.authorize(callback=url_for('authorized', _external=True, _scheme='https'))
+    return github.authorize(callback=url_for('authorized', _external=True, _scheme='http'))
 
 @app.route('/logout')
 def logout():
@@ -57,14 +58,17 @@ def authorized():
     else:
         try:
             #save user data and set log in message
-            session['github_token'] = (resp['access_token'], '')
-            session['user_data'] = github.get('user').data
-            message = 'You were successfully login as ' + session ['user_data']['login'] + '.'
+            print(resp)
+            if github.get('user').data['public_repos'] > '20':
+                session['github_token'] = (resp['access_token'], '')
+                session['user_data'] = github.get('user').data
+                message = 'You were successfully login as ' + session ['user_data']['login'] + '.'
         except Exception as inst:
             #clear the session and give error message
-            session.clear()
-            print(inst)
-            message = 'unable to login. Please try again.'
+            if resp['user_data']['public_repos'] < '20': 
+                session.clear()
+                print(inst)
+                message = 'unable to login. Please try again.'
     return render_template('message.html', message=message)
 
 
