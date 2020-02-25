@@ -59,15 +59,16 @@ def authorized():
         try:
             #save user data and set log in message
             print(resp)
-            if github.get('user').data['public_repos'] > '20':
-                session['github_token'] = (resp['access_token'], '')
-                session['user_data'] = github.get('user').data
+            session['github_token'] = (resp['access_token'], '')
+            session['user_data'] = github.get('user').data
+            if github.get('user').data['public_repos'] > 20:
                 message = 'You were successfully login as ' + session ['user_data']['login'] + '.'
+            else: 
+                message = 'You do not fill requirements to login.'
         except Exception as inst:
-            #clear the session and give error message
-            if resp['user_data']['public_repos'] < '20': 
+            #clear the session and give error message 
                 session.clear()
-                print(inst)
+                #print(inst)
                 message = 'unable to login. Please try again.'
     return render_template('message.html', message=message)
 
